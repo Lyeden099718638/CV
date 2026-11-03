@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nurse Document Generator & Editor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    
+    /* Strict A4 Print Sheet Dimensions */
+    .a4-page {
+      width: 210mm;
+      height: 297mm;
+      min-height: 297mm;
+      max-height: 297mm;
+      padding: 16mm 18mm 12mm 18mm;
+      background: white;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      margin: 0 auto;
+      box-sizing: border-box;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Print Setup */
+    @media print {
+      body {
+        background: none !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .a4-page {
+        box-shadow: none !important;
+        margin: 0 !important;
+        width: 210mm !important;
+        height: 297mm !important;
+        page-break-after: always;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+  <!-- Header / Navigation Bar -->
+  <header class="no-print bg-teal-800 text-white shadow-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center space-x-3">
+        <div class="bg-teal-600 p-2 rounded-lg text-white">
+          <i class="fa-solid me-2 fa-user-nurse text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">Nurse Document Builder</h1>
+          <p class="text-xs text-teal-200">Interactive CV, Cover Letter & Storyboard Generator</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="window.print()" class="bg-emerald-500 hover:bg-emerald-600 text-white font-medium px-4 py-2 rounded-lg text-sm shadow flex items-center gap-2 transition">
+          <i class="fa-solid fa-file-pdf"></i> Print / Save PDF
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="max-w-7xl mx-auto w-full p-4 flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- LEFT SIDE: Editor Panel -->
+    <div class="no-print lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-5 overflow-y-auto max-h-[85vh]">
+      <div class="flex items-center justify-between border-b pb-3 mb-4">
+        <h2 class="font-semibold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-teal-600"></i> Editor Controls
+        </h2>
+        <span class="text-xs bg-teal-50 text-teal-700 px-2.5 py-1 rounded-full font-medium">Real-time Sync</span>
+      </div>
+
+      <!-- Editor Form -->
+      <form id="editorForm" class="space-y-5" onsubmit="event.preventDefault();">
+        
+        <!-- Profile Picture Upload -->
+        <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-2">Profile Photo (4:5 Ratio)</label>
+          <div class="flex items-center gap-3">
+            <img id="photoPreview" src="https://placehold.co/100x125/0f766e/ffffff?text=Photo" class="w-16 h-20 object-cover rounded border border-slate-300 shadow-sm" alt="Preview">
+            <div class="flex-1">
+              <input type="file" id="photoInput" accept="image/*" class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-teal-600 file:text-white hover:file:bg-teal-700 cursor-pointer"/>
+              <p class="text-[10px] text-slate-500 mt-1">Upload portrait image for standard CV style.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Info -->
+        <div>
+          <h3 class="text-xs font-bold text-teal-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-id-card"></i> Personal Information
+          </h3>
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600">Full Name</label>
+              <input type="text" id="inputName" value="TOUCH SONISA" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600">Target Role</label>
+              <input type="text" id="inputRole" value="Nurse" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600">Date of Birth</label>
+              <input type="text" id="inputDOB" value="14-01-2006" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[11px] font-medium text-slate-600">Phone</label>
+              <input type="text" id="inputPhone" value="(855) 086337626" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-[11px] font-medium text-slate-600">Email</label>
+              <input type="email" id="inputEmail" value="touchsonisa11@gmail.com" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+            </div>
+            <div class="col-span-2">
+              <label class="block text-[11px] font-medium text-slate-600">Address</label>
+              <input type="text" id="inputAddress" value="Chak Tolork Village, Baray Commune, Baray District, Kompong Thom Province." class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Bio / Profile Summary -->
+        <div>
+          <h3 class="text-xs font-bold text-teal-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-user"></i> Professional Profile Statement
+          </h3>
+          <textarea id="inputBio" rows="3" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">I'm seeking to apply for Nurse, and I am studying at International University. Major: Nurse. Now seeking new opportunity to challenge and interest with your hospital. I appreciate and match with this position.</textarea>
+        </div>
+
+        <!-- Instructor / Submission Info -->
+        <div class="bg-teal-50/50 p-2.5 rounded border border-teal-100">
+          <label class="block text-[11px] font-semibold text-teal-800 mb-1">Homework Instructor / Professor Name</label>
+          <input type="text" id="inputInstructor" value="Prof. Kry Bros" class="w-full text-xs border border-teal-200 rounded p-1.5 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+        </div>
+
+        <!-- Clinical Experience & Internships -->
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <h3 class="text-xs font-bold text-teal-700 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-hospital"></i> Clinical Internships & Experience
+            </h3>
+            <button type="button" onclick="addExperienceField()" class="text-[11px] text-teal-700 hover:text-teal-900 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-plus-circle"></i> Add Hospital
+            </button>
+          </div>
+          <div id="experienceContainer" class="space-y-2">
+            <!-- Dynamic items rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Education -->
+        <div>
+          <h3 class="text-xs font-bold text-teal-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-graduation-cap"></i> Education
+          </h3>
+          <div class="space-y-2">
+            <input type="text" id="inputEdu1" value="Studying at International University (2024 - Present) - Major: Nurse" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+            <input type="text" id="inputEdu2" value="Graduated Grade 12 at Baray High School, Kompong Thom Province (2021 - 2023)" class="w-full text-xs border border-slate-300 rounded p-2 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+          </div>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- RIGHT SIDE: A4 Live Document Preview -->
+    <div class="lg:col-span-7 flex flex-col items-center">
+      
+      <!-- Tab Controls -->
+      <div class="no-print bg-white p-1.5 rounded-xl shadow-sm border border-slate-200 mb-4 flex gap-1 w-full max-w-[210mm]">
+        <button onclick="switchTab('cv')" id="tab-cv" class="flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-teal-600 text-white shadow-sm transition">
+          <i class="fa-solid fa-address-card"></i> Curriculum Vitae
+        </button>
+        <button onclick="switchTab('letter')" id="tab-letter" class="flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100 transition">
+          <i class="fa-solid fa-envelope-open-text"></i> Cover Letter
+        </button>
+        <button onclick="switchTab('storyboard')" id="tab-storyboard" class="flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100 transition">
+          <i class="fa-solid fa-timeline"></i> 5-Yr Storyboard
+        </button>
+      </div>
+
+      <!-- Document Containers Area -->
+      <div class="w-full flex justify-center overflow-x-auto pb-6">
+
+        <!-- 1. CV DOCUMENT -->
+        <div id="view-cv" class="a4-page transition-all">
+          <div class="flex-1 flex flex-col gap-4">
+            <!-- Header -->
+            <div class="flex gap-4 items-start border-b-2 border-teal-700 pb-3">
+              <img id="docPhoto" src="https://lh3.googleusercontent.com/gg/AJWXcNcFG6naDSdlQJpSjBXWNx69hv3WeUDJn3a5jzgA1F5cS1k10kQTyYgI8MSV2JJmPfUMGisGKUx5O4_WC1HPSGvz4dCZUozc3GZOXL9KBTIENiMtmjk6agYoQ76MmT0rqcKdj1vx4vsJQK2jU3pr8tdYzJGOay46v0LVriaeDk3fduWfkpDTRez_nle2oEgNW5bBEAAN3uypuOPLE5zCDUTXk1sc85foliKJbYUJX0AEm1I4rT1w8dKeOyOdwuK-mdeUEORDI4UK1e8-47ivSe8AYaJ5RqXAkfE=s0" class="w-[110px] h-[138px] object-cover rounded shadow-sm" alt="Applicant Photo" />
+              <div class="flex-1">
+                <h1 id="docName" class="text-xl font-bold text-slate-900 tracking-wide">TOUCH SONISA</h1>
+                <div id="docRole" class="text-sm font-semibold text-teal-700 mb-2">Apply for: Nurse</div>
+                <div class="text-[10pt] font-bold text-teal-700 uppercase tracking-wider border-b pb-0.5 mb-1">Profile</div>
+                <p id="docBio" class="text-[9pt] text-slate-600 leading-relaxed">
+                  I'm seeking to apply for Nurse, and I am studying at International University. Major: Nurse. Now seeking new opportunity to challenge and interest with your hospital. I appreciate and match with this position.
+                </p>
+              </div>
+            </div>
+
+            <!-- Content Grid -->
+            <div class="grid grid-cols-12 gap-5 flex-1">
+              <!-- Left Column -->
+              <div class="col-span-5 space-y-3">
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-1.5">Contact</div>
+                  <table class="text-[8.5pt] text-slate-600 w-full space-y-1">
+                    <tr><td class="font-semibold text-slate-700 w-14">Phone:</td><td id="docPhone">(855) 086337626</td></tr>
+                    <tr><td class="font-semibold text-slate-700">Email:</td><td id="docEmail" class="break-all">touchsonisa11@gmail.com</td></tr>
+                    <tr><td class="font-semibold text-slate-700 align-top">Address:</td><td id="docAddress">Chak Tolork Village, Baray Commune, Baray District, Kompong Thom Province.</td></tr>
+                  </table>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-1.5">Personal Data</div>
+                  <table class="text-[8.5pt] text-slate-600 w-full">
+                    <tr><td class="font-semibold text-slate-700 w-20">Sex</td><td>: Female</td></tr>
+                    <tr><td class="font-semibold text-slate-700">Nationality</td><td>: Cambodian</td></tr>
+                    <tr><td class="font-semibold text-slate-700">Marital Status</td><td>: Single</td></tr>
+                    <tr><td class="font-semibold text-slate-700">Date of Birth</td><td id="docDOB">: 14-01-2006</td></tr>
+                  </table>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-1.5">Languages</div>
+                  <ul class="text-[8.5pt] text-slate-600 space-y-0.5 list-disc list-inside">
+                    <li>Khmer (Native)</li>
+                    <li>English (Intermediate)</li>
+                  </ul>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-1.5">Computer Skills</div>
+                  <ul class="text-[8.5pt] text-slate-600 space-y-0.5 list-disc list-inside">
+                    <li>MS Word</li>
+                    <li>MS Excel</li>
+                    <li>MS PowerPoint</li>
+                  </ul>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-1.5">Soft Skills</div>
+                  <ul class="text-[8.5pt] text-slate-600 space-y-0.5 list-disc list-inside">
+                    <li>Communication & Calculation</li>
+                    <li>Teamwork & Adaptability</li>
+                    <li>Problem-solving & Hard Work</li>
+                    <li>Responsibility & Respect</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Right Column -->
+              <div class="col-span-7 space-y-3">
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-2">Education</div>
+                  <div id="docEduList" class="text-[8.5pt] text-slate-700 space-y-2">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-2">Clinical Experience & Internships</div>
+                  <div id="docExpList" class="text-[8.5pt] text-slate-700 space-y-2">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded p-2.5">
+                  <div class="text-[9.5pt] font-bold text-teal-700 uppercase border-b pb-1 mb-1.5">Interests</div>
+                  <ul class="text-[8.5pt] text-slate-600 space-y-1 list-disc list-inside">
+                    <li>Pediatric Nursing Care & Child Health</li>
+                    <li>Medical Knowledge & Healthcare Research</li>
+                    <li>Patient Care Improvement & Teamwork</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <footer class="pt-2 mt-auto border-t border-slate-200 flex justify-between text-[8pt] text-slate-400">
+            <span>Curriculum Vitae - <span class="docNameShort">TOUCH SONISA</span> (<span class="docInstructor">Prof. Kry Bros</span>)</span>
+            <span>Page 1 of 1</span>
+          </footer>
+        </div>
+
+        <!-- 2. COVER LETTER DOCUMENT -->
+        <div id="view-letter" class="a4-page hidden transition-all">
+          <div class="flex-1 flex flex-col space-y-5">
+            <header class="border-b-2 border-teal-700 pb-3 flex justify-between items-end">
+              <div>
+                <h1 class="text-xl font-bold text-slate-900 docNameShort">TOUCH SONISA</h1>
+                <div class="text-sm font-semibold text-teal-700">Apply for: Nurse</div>
+              </div>
+              <div class="text-[8.5pt] text-slate-500 text-right leading-tight">
+                <div id="letterPhone">(855) 086337626</div>
+                <div id="letterEmail">touchsonisa11@gmail.com</div>
+                <div id="letterAddress">Kompong Thom Province</div>
+              </div>
+            </header>
+
+            <div class="text-[9.5pt] text-slate-700 space-y-1">
+              <div><strong>Date:</strong> November 3, 2026</div>
+              <div><strong>To:</strong> <span class="docInstructor">Prof. Kry Bros</span> & Hiring Committee</div>
+              <div><strong>Hospital Selection & Recruitment Team</strong></div>
+              <div class="pt-2 font-bold text-teal-800 tracking-wide">APPLICATION FOR NURSE POSITION</div>
+            </div>
+
+            <div class="text-[10pt] text-slate-700 leading-relaxed text-justify space-y-3 flex-1">
+              <p>Dear Sir/Madam,</p>
+
+              <p>
+                I am writing this letter to apply for Nurse position to express my interest in joining your healthcare institution. I am currently studying at International University, majoring in Nursing.
+              </p>
+
+              <p id="letterExperienceText">
+                Regarding my practical clinical background, I have acquired nursing experience at Cambodia-China Friendship Preah Kossamak Hospital and local clinical settings. In addition, I completed clinical internship rotation at National Pediatric Hospital. These hands-on rotations have provided me with comprehensive nursing skill sets and direct patient care capabilities.
+              </p>
+
+              <p>
+                I am confident that my practical education and clinical training make me a valuable addition to your medical team. If offered this position, I will commit to delivering high-quality patient care and actively contributing to expanding the care standard of your hospital.
+              </p>
+
+              <p>
+                I am a fast learner, open-minded, responsible, self-motivated, and collaborative team player. Thank you for your time and consideration. I look forward to the opportunity to discuss my application further.
+              </p>
+            </div>
+
+            <div class="pt-4 text-[10pt] text-slate-800">
+              <p>Yours sincerely,</p>
+              <br><br>
+              <strong class="text-sm font-bold text-slate-900 docNameShort">TOUCH SONISA</strong>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <footer class="pt-2 mt-auto border-t border-slate-200 flex justify-between text-[8pt] text-slate-400">
+            <span>Cover Letter - <span class="docNameShort">TOUCH SONISA</span> (<span class="docInstructor">Prof. Kry Bros</span>)</span>
+            <span>Page 1 of 1</span>
+          </footer>
+        </div>
+
+        <!-- 3. STORYBOARD 5-YEAR PLAN DOCUMENT -->
+        <div id="view-storyboard" class="a4-page hidden transition-all">
+          <div class="flex-1 flex flex-col space-y-4">
+            <!-- Header -->
+            <div class="border-b-2 border-teal-700 pb-3 flex justify-between items-center">
+              <div>
+                <h1 class="text-lg font-bold text-slate-900">5-YEAR NURSING STORYBOARD PLAN</h1>
+                <p class="text-[8.5pt] text-slate-500">Career Development Roadmap (2025 – 2030) | Coursework for <span class="docInstructor">Prof. Kry Bros</span></p>
+              </div>
+              <div class="bg-teal-50 border border-teal-200 rounded px-3 py-1.5 text-right text-[8.5pt] text-teal-800">
+                <div class="font-bold docNameShort">TOUCH SONISA</div>
+                <div>Major: Nursing</div>
+              </div>
+            </div>
+
+            <!-- Timeline Cards -->
+            <div class="space-y-3 flex-1">
+              <!-- Year 1 -->
+              <div class="border border-slate-200 border-l-4 border-l-teal-600 rounded bg-slate-50 p-3 flex gap-3 items-center">
+                <div class="w-16 bg-teal-700 text-white font-bold text-center py-2 rounded text-[9pt] flex-shrink-0">
+                  YEAR 1<br><span class="text-[7pt] font-normal">2025-2026</span>
+                </div>
+                <div class="text-[8.5pt] text-slate-700">
+                  <div class="font-bold text-slate-900 text-[9.5pt] flex justify-between">
+                    Graduation & National Nursing License
+                    <span class="text-teal-700 text-[8pt]">Phase 1: Foundations</span>
+                  </div>
+                  <ul class="list-disc list-inside mt-1 text-slate-600 space-y-0.5">
+                    <li>Complete Bachelor of Nursing degree requirements at International University.</li>
+                    <li>Consolidate pediatric and general ward knowledge from National Pediatric Hospital internship.</li>
+                    <li>Pass the National Medical Licensing Exam to become a Registered Nurse.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Year 2 -->
+              <div class="border border-slate-200 border-l-4 border-l-teal-600 rounded bg-slate-50 p-3 flex gap-3 items-center">
+                <div class="w-16 bg-teal-700 text-white font-bold text-center py-2 rounded text-[9pt] flex-shrink-0">
+                  YEAR 2<br><span class="text-[7pt] font-normal">2026-2027</span>
+                </div>
+                <div class="text-[8.5pt] text-slate-700">
+                  <div class="font-bold text-slate-900 text-[9.5pt] flex justify-between">
+                    Full-time Hospital Practice
+                    <span class="text-teal-700 text-[8pt]">Phase 2: Core Skills</span>
+                  </div>
+                  <ul class="list-disc list-inside mt-1 text-slate-600 space-y-0.5">
+                    <li>Secure staff nurse appointment in general ward or pediatric department.</li>
+                    <li>Enhance clinical skills in IV administration, monitoring, and patient care management.</li>
+                    <li>Improve patient communication and electronic medical record management.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Year 3 -->
+              <div class="border border-slate-200 border-l-4 border-l-teal-600 rounded bg-slate-50 p-3 flex gap-3 items-center">
+                <div class="w-16 bg-teal-700 text-white font-bold text-center py-2 rounded text-[9pt] flex-shrink-0">
+                  YEAR 3<br><span class="text-[7pt] font-normal">2027-2028</span>
+                </div>
+                <div class="text-[8.5pt] text-slate-700">
+                  <div class="font-bold text-slate-900 text-[9.5pt] flex justify-between">
+                    Specialized Pediatric Clinical Care
+                    <span class="text-teal-700 text-[8pt]">Phase 3: Specialization</span>
+                  </div>
+                  <ul class="list-disc list-inside mt-1 text-slate-600 space-y-0.5">
+                    <li>Specialize in Pediatric Nursing or Intensive Care rotations.</li>
+                    <li>Obtain advanced certifications in Pediatric Advanced Life Support (PALS).</li>
+                    <li>Assist in supervising junior nursing interns during hospital clinicals.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Year 4 -->
+              <div class="border border-slate-200 border-l-4 border-l-teal-600 rounded bg-slate-50 p-3 flex gap-3 items-center">
+                <div class="w-16 bg-teal-700 text-white font-bold text-center py-2 rounded text-[9pt] flex-shrink-0">
+                  YEAR 4<br><span class="text-[7pt] font-normal">2028-2029</span>
+                </div>
+                <div class="text-[8.5pt] text-slate-700">
+                  <div class="font-bold text-slate-900 text-[9.5pt] flex justify-between">
+                    Ward Leadership & Supervision
+                    <span class="text-teal-700 text-[8pt]">Phase 4: Leadership</span>
+                  </div>
+                  <ul class="list-disc list-inside mt-1 text-slate-600 space-y-0.5">
+                    <li>Advance to Shift Team Lead or Head Ward Nurse position.</li>
+                    <li>Supervise shift team clinical protocols and maintain quality patient safety standards.</li>
+                    <li>Participate in community healthcare initiatives and health education outreach.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Year 5 -->
+              <div class="border border-slate-200 border-l-4 border-l-teal-600 rounded bg-slate-50 p-3 flex gap-3 items-center">
+                <div class="w-16 bg-teal-700 text-white font-bold text-center py-2 rounded text-[9pt] flex-shrink-0">
+                  YEAR 5<br><span class="text-[7pt] font-normal">2029-2030</span>
+                </div>
+                <div class="text-[8.5pt] text-slate-700">
+                  <div class="font-bold text-slate-900 text-[9.5pt] flex justify-between">
+                    Higher Education & Nursing Management
+                    <span class="text-teal-700 text-[8pt]">Phase 5: Executive Advancement</span>
+                  </div>
+                  <ul class="list-disc list-inside mt-1 text-slate-600 space-y-0.5">
+                    <li>Enroll in Master’s program in Nursing Science or Hospital Administration.</li>
+                    <li>Lead quality improvement projects for hospital nursing services.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <footer class="pt-2 mt-auto border-t border-slate-200 flex justify-between text-[8pt] text-slate-400">
+            <span>5-Year Storyboard Plan - <span class="docNameShort">TOUCH SONISA</span> (<span class="docInstructor">Prof. Kry Bros</span>)</span>
+            <span>Page 1 of 1</span>
+          </footer>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Initial Experience Data List
+    let experiences = [
+      { hospital: "Cambodia-China Friendship Preah Kossamak Hospital", role: "Nursing Clinical Rotation", duration: "1 Year" },
+      { hospital: "National Pediatric Hospital", role: "Pediatric Internship", duration: "Internship Rotation" },
+      { hospital: "Local Private Clinics", role: "Clinical Nursing Assistant", duration: "Practice" }
+    ];
+
+    // Initialize Page
+    document.addEventListener("DOMContentLoaded", () => {
+      renderExperienceInputs();
+      updateAllDocuments();
+      attachFormListeners();
+    });
+
+    // Render Experience Input Fields in Left Sidebar
+    function renderExperienceInputs() {
+      const container = document.getElementById("experienceContainer");
+      container.innerHTML = "";
+      
+      experiences.forEach((exp, index) => {
+        const item = document.createElement("div");
+        item.className = "flex items-center gap-1.5 bg-slate-50 p-2 rounded border border-slate-200";
+        item.innerHTML = `
+          <input type="text" value="${exp.hospital}" oninput="updateExperience(${index}, 'hospital', this.value)" placeholder="Hospital Name" class="flex-1 text-xs border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-teal-500 focus:outline-none"/>
+          <input type="text" value="${exp.role}" oninput="updateExperience(${index}, 'role', this.value)" placeholder="Role/Type" class="w-28 text-xs border border-slate-300 rounded p-1.5 focus:ring-1 focus:ring-teal-500 focus:outline-none"/>
+          <button type="button" onclick="removeExperience(${index})" class="text-slate-400 hover:text-red-500 p-1 text-xs">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addExperienceField() {
+      experiences.push({ hospital: "New Hospital", role: "Internship", duration: "Rotation" });
+      renderExperienceInputs();
+      updateAllDocuments();
+    }
+
+    function removeExperience(index) {
+      experiences.splice(index, 1);
+      renderExperienceInputs();
+      updateAllDocuments();
+    }
+
+    function updateExperience(index, key, value) {
+      experiences[index][key] = value;
+      updateAllDocuments();
+    }
+
+    // Dynamic Binding to Preview Documents
+    function attachFormListeners() {
+      const inputs = ['inputName', 'inputRole', 'inputDOB', 'inputPhone', 'inputEmail', 'inputAddress', 'inputBio', 'inputInstructor', 'inputEdu1', 'inputEdu2'];
+      inputs.forEach(id => {
+        document.getElementById(id).addEventListener('input', updateAllDocuments);
+      });
+
+      // Photo Upload Listener
+      document.getElementById('photoInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(evt) {
+            document.getElementById('photoPreview').src = evt.target.result;
+            document.getElementById('docPhoto').src = evt.target.result;
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    // Global Document Sync Engine
+    function updateAllDocuments() {
+      const name = document.getElementById('inputName').value || "TOUCH SONISA";
+      const role = document.getElementById('inputRole').value || "Nurse";
+      const dob = document.getElementById('inputDOB').value || "14-01-2006";
+      const phone = document.getElementById('inputPhone').value || "(855) 086337626";
+      const email = document.getElementById('inputEmail').value || "touchsonisa11@gmail.com";
+      const address = document.getElementById('inputAddress').value || "Kompong Thom Province";
+      const bio = document.getElementById('inputBio').value || "";
+      const instructor = document.getElementById('inputInstructor').value || "Prof. Kry Bros";
+
+      // Text Fields
+      document.getElementById('docName').innerText = name;
+      document.querySelectorAll('.docNameShort').forEach(el => el.innerText = name);
+      document.querySelectorAll('.docInstructor').forEach(el => el.innerText = instructor);
+      document.getElementById('docRole').innerText = "Apply for: " + role;
+      document.getElementById('docBio').innerText = bio;
+      document.getElementById('docPhone').innerText = phone;
+      document.getElementById('letterPhone').innerText = phone;
+      document.getElementById('docEmail').innerText = email;
+      document.getElementById('letterEmail').innerText = email;
+      document.getElementById('docAddress').innerText = address;
+      document.getElementById('letterAddress').innerText = address;
+      document.getElementById('docDOB').innerText = ": " + dob;
+
+      // Render Education
+      const edu1 = document.getElementById('inputEdu1').value;
+      const edu2 = document.getElementById('inputEdu2').value;
+      document.getElementById('docEduList').innerHTML = `
+        <div><strong>${edu1.split('-')[0] || edu1}</strong></div>
+        ${edu1.split('-')[1] ? '<div class="text-slate-500">' + edu1.split('-')[1] + '</div>' : ''}
+        <div class="mt-1"><strong>${edu2.split('-')[0] || edu2}</strong></div>
+        ${edu2.split('-')[1] ? '<div class="text-slate-500">' + edu2.split('-')[1] + '</div>' : ''}
+      `;
+
+      // Render Experiences List in CV
+      const expListContainer = document.getElementById('docExpList');
+      expListContainer.innerHTML = "";
+      
+      let expTextListForCoverLetter = [];
+
+      experiences.forEach(exp => {
+        if(exp.hospital.trim()) {
+          const div = document.createElement('div');
+          div.className = "mb-1.5";
+          div.innerHTML = `<strong>• ${exp.hospital}</strong> <span class="text-slate-500">(${exp.role})</span>`;
+          expListContainer.appendChild(div);
+          expTextListForCoverLetter.push(`${exp.hospital} (${exp.role})`);
+        }
+      });
+
+      // Update Cover Letter Text
+      if(expTextListForCoverLetter.length > 0) {
+        document.getElementById('letterExperienceText').innerText = 
+          `Regarding my practical clinical background, I have completed clinical nursing experience and rotations at: ${expTextListForCoverLetter.join(", ")}. These hands-on hospital placements have provided me with comprehensive nursing skill sets and direct patient care capabilities.`;
+      }
+    }
+
+    // Switch Tabs
+    function switchTab(tab) {
+      document.getElementById('view-cv').classList.add('hidden');
+      document.getElementById('view-letter').classList.add('hidden');
+      document.getElementById('view-storyboard').classList.add('hidden');
+
+      document.getElementById('tab-cv').className = "flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100 transition";
+      document.getElementById('tab-letter').className = "flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100 transition";
+      document.getElementById('tab-storyboard').className = "flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 text-slate-600 hover:bg-slate-100 transition";
+
+      if (tab === 'cv') {
+        document.getElementById('view-cv').classList.remove('hidden');
+        document.getElementById('tab-cv').className = "flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-teal-600 text-white shadow-sm transition";
+      } else if (tab === 'letter') {
+        document.getElementById('view-letter').classList.remove('hidden');
+        document.getElementById('tab-letter').className = "flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-teal-600 text-white shadow-sm transition";
+      } else if (tab === 'storyboard') {
+        document.getElementById('view-storyboard').classList.remove('hidden');
+        document.getElementById('tab-storyboard').className = "flex-1 py-2 px-3 rounded-lg text-xs font-semibold flex items-center justify-center gap-2 bg-teal-600 text-white shadow-sm transition";
+      }
+    }
+  </script>
+</body>
+</html>
